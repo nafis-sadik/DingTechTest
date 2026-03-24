@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Application.API/Application.API.csproj" />
+  <Project Path="Application.Domain/Application.Domain.csproj" />
+  <Project Path="Application.Entities/Application.Entities.csproj" Id="c8444f53-11bf-49ee-b21e-38f18c6acb8b" />
+  <Project Path="System.Core/System.Core.csproj" />
+</Solution>
