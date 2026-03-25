@@ -1,16 +1,19 @@
-﻿using Application.Entities;
+using Application.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace DingTechTest.Configurations
 {
     public static class DatabaseInitializer
     {
-        public static async Task InitApplicationDatabase(this IApplicationBuilder app, IWebHostEnvironment env)
+        public static async Task InitApplicationDatabase(this IHost host)
         {
-            using (var scope = app.ApplicationServices.CreateScope())
+            using (var scope = host.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-                var context = services.GetRequiredService<ApplicationDbContext>();
+                var provider = scope.ServiceProvider;
+                var context = provider.GetRequiredService<ApplicationDbContext>();
+                var env = provider.GetRequiredService<IHostEnvironment>();
 
                 if ((await context.Database.GetPendingMigrationsAsync()).Any())
                 {

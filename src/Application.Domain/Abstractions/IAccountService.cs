@@ -4,8 +4,8 @@ namespace Application.Domain.Abstractions
 {
     public interface IAccountService
     {
-        public void Deposit(TransactionRecord record);
-        public void Withdraw(TransactionRecord record);
+        public void Deposit(SingleTransactionRecord record);
+        public void Withdraw(SingleTransactionRecord record);
         public void PrintStatement();
     }
 }

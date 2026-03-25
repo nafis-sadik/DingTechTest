@@ -4,8 +4,8 @@ namespace Application.Domain.Abstractions
 {
     public interface ICustomerService
     {
-        public void AddCustomer(Customer customer);
-        public void UpdateCustomer(Customer customer);
-        public void DeleteCustomer(string customerId);
+        public Task AddCustomerAsync(Customer customer);
+        public Task UpdateCustomerAsync(Customer customer);
+        public Task DeleteCustomerAsync(string customerId);
     }
 }

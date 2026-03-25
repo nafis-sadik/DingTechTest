@@ -5,17 +5,17 @@ namespace Application.Domain.Implementations
 {
     public class CustomerService : ICustomerService
     {
-        public void AddCustomer(Customer customer)
+        public Task AddCustomerAsync(Customer customer)
         {
             throw new NotImplementedException();
         }
 
-        public void DeleteCustomer(string customerId)
+        public Task DeleteCustomerAsync(string customerId)
         {
             throw new NotImplementedException();
         }
 
-        public void UpdateCustomer(Customer customer)
+        public Task UpdateCustomerAsync(Customer customer)
         {
             throw new NotImplementedException();
         }

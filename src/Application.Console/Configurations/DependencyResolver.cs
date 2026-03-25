@@ -1,7 +1,10 @@
-﻿using Application.Entities;
+using Application.Domain.Abstractions;
+using Application.Domain.Implementations;
+using Application.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System.Core;
-using System.Core.Security;
 
 namespace DingTechTest.Configurations
 {
@@ -15,8 +18,8 @@ namespace DingTechTest.Configurations
                 options.UseNpgsql(configuration.GetConnectionString("ApplicationConnection")));
 
             // Services
-            services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
-            //services.AddScoped<IInvoiceService, InvoiceService>();
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<ICustomerService, CustomerService>();
         }
     }
 }

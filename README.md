@@ -9,10 +9,9 @@ A modern, high-performance **Multi-Tenant Billing System** built with **.NET 10.
 ### Backend
 
 - **Framework**: [.NET 10.0 (Preview/Latest)](https://dotnet.microsoft.com/)
-- **API**: ASP.NET Core Web API
+- **Application Type**: Console Application (Host-based)
 - **ORM**: [Entity Framework Core](https://learn.microsoft.com/en-us/ef/core/) with **Npgsql**
 - **Architecture**: Domain-Driven Design (DDD)
-- **API Documentation**: [Swagger / OpenAPI](https://swagger.io/specification/)
 - **Dependency Injection**: Integrated ASP.NET Core DI
 - **Containerization**: [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 
@@ -39,7 +38,7 @@ To get the project up and running locally, follow these steps:
 
 ### Run with Docker Compose (Recommended)
 
-This is the easiest way to start both the backend API and the database.
+This is the easiest way to start both the console application and the database.
 
 1. **Navigate to the Docker directory**:
 
@@ -57,7 +56,7 @@ This is the easiest way to start both the backend API and the database.
    docker-compose up -d --build
    ```
 
-   - **Backend API**: Available at [http://localhost:8080](http://localhost:8080)
+   - **Console App**: Available as `ding-tech-console` container.
    - **Postgres DB**: Available at `localhost:5432`
 
 ---
@@ -68,8 +67,8 @@ The project follows a modular architecture where each layer has a specific respo
 
 ```mermaid
 graph TD
-    API["Application.API (Web API)"] 
-    API --> Domain["Application.Domain (Business Logic)"]
+    Console["Application.Console (Host App)"] 
+    Console --> Domain["Application.Domain (Business Logic)"]
     Domain --> Entities["Application.Entities (Data Models)"]
     Entities --> Core["System.Core (Base Components)"]
     
@@ -80,7 +79,7 @@ graph TD
 
     classDef primary fill:#0d47a1,stroke:#0d47a1,color:#fff,stroke-width:2px;
     classDef secondary fill:#4a148c,stroke:#4a148c,color:#fff,stroke-width:2px;
-    class API,Domain,Entities,Core primary;
+    class Console,Domain,Entities,Core primary;
     class Postgres,EF secondary;
 ```
 
@@ -88,7 +87,7 @@ graph TD
 
 ## 📁 Project Structure
 
-- `src/Application.API`: The main entry point for the RESTful API service.
+- `src/Application.Console`: The main entry point for the background/console application.
 - `src/Application.Domain`: Contains business logic, interfaces, and domain models.
 - `src/Application.Entities`: Database models and Entity Framework DbContext.
 - `src/System.Core`: Shared libraries, generic repositories, and utility functions.

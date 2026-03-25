@@ -13,12 +13,11 @@ services:
       - "${DB_PORT_OUTER:-5432}:${DB_PORT:-5432}"
     volumes:
       - ding-tech-db-data:/var/lib/postgresql/data
-
-  ding-tech-api:
+  ding-tech-console:
     build:
       context: ../
-      dockerfile: src/Application.API/Dockerfile
-    container_name: ding-tech-api
+      dockerfile: src/Application.Console/Dockerfile
+    container_name: ding-tech-console
     depends_on:
       - ding-tech-db
     env_file:
@@ -26,9 +25,6 @@ services:
     environment:
       - ConnectionStrings__ApplicationConnection=Host=ding-tech-db;Port=${DB_PORT:-5432};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Development
-    ports:
-      - "${API_PORT_OUTER:-8080}:8080"
-      - "${API_HTTPS_PORT_OUTER:-8081}:8081"
 
 volumes:
   ding-tech-db-data:

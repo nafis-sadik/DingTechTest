@@ -1,10 +1,11 @@
 ﻿namespace Application.Domain.Models
 {
-    public record TransactionRecord
+    public record AccountToAccountTransactionRecord
     {
         public int TransactionId { get; set; }
-        public string Sender { get; set; }
-        public string Reciever { get; set; }
-        public double Amount { get; set; }
+        public int SenderAccountNo { get; set; }
+        public int RecieverAccountNo { get; set; }
+        public string RecieverAccountHolderId { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
     }
 }

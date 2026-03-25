@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Application.Entities
 {
@@ -8,13 +7,11 @@ namespace Application.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TransactionId { get; set; }
 
-        [Required]
-        public string From { get; set; } = string.Empty;
+        public string? From { get; set; }
 
-        [Required]
-        public string To { get; set; } = string.Empty;
+        public string? To { get; set; }
 
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
 
         public DateTime Time { get; set; }
     }
