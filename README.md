@@ -78,8 +78,8 @@ graph TD
         Core --> EF["EF Core 10.0"]
     end
 
-    classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef secondary fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
+    classDef primary fill:#0d47a1,stroke:#0d47a1,color:#fff,stroke-width:2px;
+    classDef secondary fill:#4a148c,stroke:#4a148c,color:#fff,stroke-width:2px;
     class API,Domain,Entities,Core primary;
     class Postgres,EF secondary;
 ```
