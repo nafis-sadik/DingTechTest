@@ -119,3 +119,4 @@ out/
 appsettings.*.json
 
 # End of file
+/docker-containers/.env
