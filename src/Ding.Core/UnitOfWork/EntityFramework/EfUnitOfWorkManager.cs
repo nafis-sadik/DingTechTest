@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Ding.Core.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using System.Core.UnitOfWork;
 
-namespace System.Core.EntityFramework
+namespace Ding.Core.EntityFramework
 {
     public class EFUnitOfWorkManager(DbContext dbContext) : IUnitOfWorkManager
     {

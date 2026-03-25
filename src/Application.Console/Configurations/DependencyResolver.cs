@@ -1,10 +1,10 @@
 using Application.Domain.Abstractions;
 using Application.Domain.Implementations;
 using Application.Entities;
+using Ding.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Core;
 
 namespace DingTechTest.Configurations
 {

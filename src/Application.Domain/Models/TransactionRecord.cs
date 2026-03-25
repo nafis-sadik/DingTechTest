@@ -1,4 +1,4 @@
-﻿namespace Application.Domain.Models
+namespace Application.Domain.Models
 {
     public record AccountToAccountTransactionRecord
     {

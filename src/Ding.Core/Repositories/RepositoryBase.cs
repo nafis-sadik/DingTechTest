@@ -1,4 +1,4 @@
-﻿using CaseExtensions;
+using CaseExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-namespace System.Core.Repositories
+namespace Ding.Core.Repositories
 {
     public class RepositoryBase<TEntity> : IRepositoryBase<TEntity> where TEntity : class
     {

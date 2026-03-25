@@ -1,6 +1,6 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
-namespace System.Core.Repositories
+namespace Ding.Core.Repositories
 {
     public interface IRepositoryBase<TEntity> where TEntity : class
     {

@@ -1,6 +1,6 @@
-﻿using System.Core.Repositories;
+using Ding.Core.Repositories;
 
-namespace System.Core.UnitOfWork
+namespace Ding.Core.UnitOfWork
 {
     public interface IRepositoryFactory : IDisposable
     {

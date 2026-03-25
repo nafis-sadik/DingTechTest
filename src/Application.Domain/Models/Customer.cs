@@ -1,8 +1,10 @@
-﻿namespace Application.Domain.Models
+namespace Application.Domain.Models
 {
-    public record Customer
+    public class Customer
     {
-        public string CustomerId { get; set; }
-        public string CustomerName { get; set; }
+        public string CustomerId { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
     }
 }

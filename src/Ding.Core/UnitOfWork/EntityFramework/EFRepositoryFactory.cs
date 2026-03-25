@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Ding.Core.Repositories;
+using Ding.Core.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using System.Core.Repositories;
-using System.Core.UnitOfWork;
 
-namespace System.Core.EntityFramework
+namespace Ding.Core.EntityFramework
 {
     public class EFRepositoryFactory : IRepositoryFactory, IDisposable
     {
@@ -27,9 +27,18 @@ namespace System.Core.EntityFramework
         }
 
         public IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class => new RepositoryBase<TEntity>(_dbContext);
+
         public void SaveChanges() => _dbContext.SaveChanges();
+
         public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
+
         public async Task RollbackAsync() => await _dbContext.Database.RollbackTransactionAsync();
-        public async void Dispose() { await _dbContext.DisposeAsync(); }
+
+        public void Dispose()
+        {
+            // Do not dispose the dbContext here.
+            // Since it is resolved from DI (scoped), the container should handle its lifecycle.
+            // Disposing it here would prevent subsequent use of the context in the same scope.
+        }
     }
 }

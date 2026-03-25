@@ -1,136 +1,121 @@
-﻿using Application.Domain.Abstractions;
+using Application.Domain.Abstractions;
 using Application.Domain.Models;
 using Application.Entities;
+using Ding.Core.UnitOfWork;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Core.UnitOfWork;
-using System.Data.Entity;
 
 namespace Application.Domain.Implementations
 {
-    public class AccountService(IUnitOfWorkManager unitOfWorkManager, ILogger<AccountService> logger) : IAccountService
+    public class AccountService(IServiceProvider provider, int accountId) : IAccountService
     {
-        private readonly ILogger<AccountService> _logger = logger;
-        private readonly IUnitOfWorkManager _unitOfWorkManager = unitOfWorkManager;
+        private readonly ILogger<AccountService> _logger = provider.GetRequiredService<ILogger<AccountService>>();
+        private readonly IUnitOfWorkManager _unitOfWorkManager = provider.GetRequiredService<IUnitOfWorkManager>();
 
-        public async void Deposit(SingleTransactionRecord record)
+        public void Deposit(SingleTransactionRecord record)
         {
             if (record.Amount <= 0)
-                throw new ArgumentException("Diposit amount can not be less than or equal to zero");
+                throw new ArgumentException("Deposit amount cannot be less than or equal to zero");
 
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _accountRepo = _repositoryFactory.GetRepository<Account>();
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                // Validation
-                Account? account = await _accountRepo.UnTrackableQuery()
-                    .Where(account => account.AccountHolderId == record.AccountHolderId && account.AccountId == record.AccountId)
-                    .Select(account => new Account
-                    {
-                        AccountId = account.AccountId,
-                        CurrentBalance = account.CurrentBalance,
-                    })
-                    .FirstOrDefaultAsync();
+                Account? account = _accountRepo.TrackableQuery()
+                    .FirstOrDefault(acc => acc.AccountId == record.AccountId);
 
                 if (account == null)
                     throw new ArgumentException("Account not found");
 
-                // Deposit
-                _accountRepo.ColumnUpdate(account.AccountId, new Dictionary<string, object> {
-                    { nameof(account.CurrentBalance), account.CurrentBalance + record.Amount },
-                });
+                account.CurrentBalance += record.Amount;
+                account.UpdatedAt = DateTime.UtcNow;
+                _accountRepo.Update(account);
 
-                // Transaction history
-                await _transactionRepo.InsertAsync(new Transaction
+                _transactionRepo.InsertAsync(new Transaction
                 {
                     From = null,
-                    To = record.AccountHolderId,
+                    To = record.AccountId.ToString(),
                     Amount = record.Amount,
-                });
+                    Time = DateTime.SpecifyKind(record.TransactionDate, DateTimeKind.Utc)
+                }).Wait(); // Synchronous wait within void method
 
-                await _repositoryFactory.SaveChangesAsync();
+                _repositoryFactory.SaveChanges();
+                _logger.LogInformation("Successfully deposited {Amount} to Account {AccountId}", record.Amount, record.AccountId);
             }
         }
 
-        public async void Transfer(AccountToAccountTransactionRecord record)
+        public void Withdraw(SingleTransactionRecord record)
         {
+            if (record.Amount <= 0)
+                throw new ArgumentException("Withdraw amount cannot be less than or equal to zero");
+
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _accountRepo = _repositoryFactory.GetRepository<Account>();
+                var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                Account? senderAcc = await _accountRepo.UnTrackableQuery()
-                    .FirstOrDefaultAsync(account => account.AccountId == record.SenderAccountNo);
+                Account? account = _accountRepo.TrackableQuery()
+                    .FirstOrDefault(acc => acc.AccountId == record.AccountId);
 
-                Account? recieverAcc = await _accountRepo.UnTrackableQuery()
-                    .FirstOrDefaultAsync(account => account.AccountId == record.RecieverAccountNo && account.AccountHolderId == record.RecieverAccountHolderId);
+                if (account == null)
+                    throw new ArgumentException("Account not found");
 
-                if (senderAcc == null)
-                    throw new ArgumentException("Sender account not found");
+                if (account.CurrentBalance < record.Amount)
+                {
+                    throw new InvalidOperationException("Error: Insufficient balance for withdrawal.");
+                }
 
-                if (recieverAcc == null)
-                    throw new ArgumentException("Reciever account not found");
+                account.CurrentBalance -= record.Amount;
+                account.UpdatedAt = DateTime.UtcNow;
+                _accountRepo.Update(account);
 
-                if (recieverAcc.CurrentBalance < record.Amount)
-                    throw new ArgumentException("Insufficient Balance");
+                _transactionRepo.InsertAsync(new Transaction
+                {
+                    From = record.AccountId.ToString(),
+                    To = null,
+                    Amount = -record.Amount,
+                    Time = DateTime.SpecifyKind(record.TransactionDate, DateTimeKind.Utc)
+                }).Wait(); // Synchronous wait within void method
 
-                // Send money
-                _accountRepo.ColumnUpdate(senderAcc.AccountId,
-                    new Dictionary<string, object> {
-                        { nameof(senderAcc.CurrentBalance), senderAcc.CurrentBalance - record.Amount }
-                    });
-
-                // Recieve money
-                _accountRepo.ColumnUpdate(recieverAcc.AccountId,
-                    new Dictionary<string, object> {
-                        { nameof(recieverAcc.CurrentBalance), recieverAcc.CurrentBalance + record.Amount }
-                    });
-
-                await _repositoryFactory.SaveChangesAsync();
+                _repositoryFactory.SaveChanges();
+                _logger.LogInformation("Successfully withdrew {Amount} from Account {AccountId}", record.Amount, record.AccountId);
             }
         }
 
         public void PrintStatement()
         {
-            throw new NotImplementedException();
-        }
-
-        public async void Withdraw(SingleTransactionRecord record)
-        {
-            if (record.Amount <= 0)
-                throw new ArgumentException("Withdraw amount can not be less than or equal to zero");
-
+            Console.WriteLine($"\n--- Fetching transactions for Account ID: {accountId} ---\n");
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
-                var _accountRepo = _repositoryFactory.GetRepository<Account>();
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                // Validation
-                Account? account = await _accountRepo.UnTrackableQuery()
-                    .Where(account => account.AccountHolderId == record.AccountHolderId && account.AccountId == record.AccountId)
-                    .Select(account => new Account
-                    {
-                        AccountId = account.AccountId,
-                        CurrentBalance = account.CurrentBalance,
-                    })
-                    .FirstOrDefaultAsync();
+                var transactions = _transactionRepo.UnTrackableQuery()
+                    .Where(t => t.To == accountId.ToString() || t.From == accountId.ToString())
+                    .OrderBy(t => t.Time)
+                    .ToList();
 
-                if (account == null)
-                    throw new ArgumentException("Account not found");
-
-                // Withdraw
-                _accountRepo.ColumnUpdate(account.AccountId, new Dictionary<string, object> {
-                    { nameof(account.CurrentBalance), account.CurrentBalance - record.Amount },
-                });
-
-                // Transaction history
-                await _transactionRepo.InsertAsync(new Transaction
+                if (transactions == null || !transactions.Any())
                 {
-                    From = null,
-                    To = record.AccountHolderId,
-                    Amount = record.Amount,
-                });
+                    Console.WriteLine("No transactions found for this account.");
+                    return;
+                }
 
-                await _repositoryFactory.SaveChangesAsync();
+                decimal currentBalance = 0;
+                var statementLines = new List<string>();
+
+                foreach (var tx in transactions)
+                {
+                    currentBalance += tx.Amount;
+                    statementLines.Add($"{tx.Time:dd/MM/yyyy} || {tx.Amount,10:F2} || {currentBalance,10:F2}");
+                }
+
+                Console.WriteLine("Date       || Amount     || Balance");
+                statementLines.Reverse();
+                foreach (var line in statementLines)
+                {
+                    Console.WriteLine(line);
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace Application.Domain.Models
+namespace Application.Domain.Models
 {
     public class SingleTransactionRecord
     {
@@ -6,5 +6,6 @@
         public int AccountId { get; set; }
         public string AccountHolderId { get; set; } = string.Empty;
         public decimal Amount { get; set; }
+        public DateTime TransactionDate { get; set; } = DateTime.Now;
     }
 }

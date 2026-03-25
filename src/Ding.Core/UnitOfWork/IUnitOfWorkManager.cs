@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage;
 
-namespace System.Core.UnitOfWork
+namespace Ding.Core.UnitOfWork
 {
     public interface IUnitOfWorkManager
     {
