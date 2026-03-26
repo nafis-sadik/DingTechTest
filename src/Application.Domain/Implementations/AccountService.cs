@@ -4,96 +4,119 @@ using Application.Entities;
 using Ding.Core.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Data.Entity;
+using System.Security.Principal;
 
 namespace Application.Domain.Implementations
 {
-    public class AccountService(IServiceProvider provider, int accountId) : IAccountService
+    public class AccountService : IAccountService
     {
-        private readonly ILogger<AccountService> _logger = provider.GetRequiredService<ILogger<AccountService>>();
-        private readonly IUnitOfWorkManager _unitOfWorkManager = provider.GetRequiredService<IUnitOfWorkManager>();
+        private readonly ILogger<AccountService> _logger;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly Account AccountEnttiy;
 
-        public void Deposit(SingleTransactionRecord record)
+        public AccountService(IServiceProvider provider, int accountId)
         {
-            if (record.Amount <= 0)
+            _logger = provider.GetRequiredService<ILogger<AccountService>>();
+            _unitOfWorkManager = provider.GetRequiredService<IUnitOfWorkManager>();
+            using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
+            {
+                var _accountRepo = _repositoryFactory.GetRepository<Account>();
+
+                Account? account = _accountRepo.UnTrackableQuery()
+                    .Where(account => account.AccountId == accountId)
+                    .FirstOrDefault();
+
+                if(account == null)
+                    throw new ArgumentException("Account not found");
+
+                AccountEnttiy = account;
+            }
+        }
+
+        public async void Deposit(decimal amount)
+        {
+            if (amount <= 0)
                 throw new ArgumentException("Deposit amount cannot be less than or equal to zero");
+
+            AccountEnttiy.CurrentBalance += amount;
+            AccountEnttiy.UpdatedAt = DateTime.UtcNow;
 
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _accountRepo = _repositoryFactory.GetRepository<Account>();
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                Account? account = _accountRepo.TrackableQuery()
-                    .FirstOrDefault(acc => acc.AccountId == record.AccountId);
-
-                if (account == null)
-                    throw new ArgumentException("Account not found");
-
-                account.CurrentBalance += record.Amount;
-                account.UpdatedAt = DateTime.UtcNow;
-                _accountRepo.Update(account);
+                _accountRepo.ColumnUpdate(
+                    AccountEnttiy.AccountId,
+                    new Dictionary<string, object>
+                    {
+                        { nameof(AccountEnttiy.CurrentBalance), AccountEnttiy.CurrentBalance },
+                        { nameof(AccountEnttiy.UpdatedAt), AccountEnttiy.UpdatedAt }
+                    }
+                );
 
                 _transactionRepo.InsertAsync(new Transaction
                 {
                     From = null,
-                    To = record.AccountId.ToString(),
-                    Amount = record.Amount,
-                    Time = DateTime.SpecifyKind(record.TransactionDate, DateTimeKind.Utc)
+                    To = AccountEnttiy.AccountId,
+                    Amount = amount,
+                    TransactionTime = DateTime.UtcNow,
                 }).Wait(); // Synchronous wait within void method
 
                 _repositoryFactory.SaveChanges();
-                _logger.LogInformation("Successfully deposited {Amount} to Account {AccountId}", record.Amount, record.AccountId);
+                _logger.LogInformation("Successfully deposited {Amount} to Account {AccountId}", amount, AccountEnttiy.AccountId);
             }
         }
 
-        public void Withdraw(SingleTransactionRecord record)
+        public async void Withdraw(decimal amount)
         {
-            if (record.Amount <= 0)
+            if (amount <= 0)
                 throw new ArgumentException("Withdraw amount cannot be less than or equal to zero");
+
+            if (AccountEnttiy.CurrentBalance < amount)
+                throw new InvalidOperationException("Error: Insufficient balance for withdrawal.");
 
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _accountRepo = _repositoryFactory.GetRepository<Account>();
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                Account? account = _accountRepo.TrackableQuery()
-                    .FirstOrDefault(acc => acc.AccountId == record.AccountId);
+                AccountEnttiy.CurrentBalance -= amount;
+                AccountEnttiy.UpdatedAt = DateTime.UtcNow;
+                _accountRepo.ColumnUpdate(
+                    AccountEnttiy.AccountId,
+                    new Dictionary<string, object>
+                    {
+                        { nameof(AccountEnttiy.CurrentBalance), AccountEnttiy.CurrentBalance },
+                        { nameof(AccountEnttiy.UpdatedAt), AccountEnttiy.UpdatedAt }
+                    }
+                );
 
-                if (account == null)
-                    throw new ArgumentException("Account not found");
-
-                if (account.CurrentBalance < record.Amount)
+                await _transactionRepo.InsertAsync(new Transaction
                 {
-                    throw new InvalidOperationException("Error: Insufficient balance for withdrawal.");
-                }
-
-                account.CurrentBalance -= record.Amount;
-                account.UpdatedAt = DateTime.UtcNow;
-                _accountRepo.Update(account);
-
-                _transactionRepo.InsertAsync(new Transaction
-                {
-                    From = record.AccountId.ToString(),
+                    From = AccountEnttiy.AccountId,
                     To = null,
-                    Amount = -record.Amount,
-                    Time = DateTime.SpecifyKind(record.TransactionDate, DateTimeKind.Utc)
-                }).Wait(); // Synchronous wait within void method
+                    Amount = amount,
+                    TransactionTime = DateTime.UtcNow,
+                }); // Synchronous wait within void method
 
                 _repositoryFactory.SaveChanges();
-                _logger.LogInformation("Successfully withdrew {Amount} from Account {AccountId}", record.Amount, record.AccountId);
+                _logger.LogInformation("Successfully withdrew {Amount} from Account {AccountId}", amount, AccountEnttiy.AccountId);
             }
         }
 
-        public void PrintStatement()
+        public async void PrintStatement()
         {
-            Console.WriteLine($"\n--- Fetching transactions for Account ID: {accountId} ---\n");
+            Console.WriteLine($"\n--- Fetching transactions for Account ID: {AccountEnttiy.AccountId} ---\n");
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                var transactions = _transactionRepo.UnTrackableQuery()
-                    .Where(t => t.To == accountId.ToString() || t.From == accountId.ToString())
-                    .OrderBy(t => t.Time)
-                    .ToList();
+                var transactions = await _transactionRepo.UnTrackableQuery()
+                    .Where(t => t.To == AccountEnttiy.AccountId || t.From == AccountEnttiy.AccountId)
+                    .OrderByDescending(t => t.TransactionTime)
+                    .ToListAsync();
 
                 if (transactions == null || !transactions.Any())
                 {
@@ -107,7 +130,7 @@ namespace Application.Domain.Implementations
                 foreach (var tx in transactions)
                 {
                     currentBalance += tx.Amount;
-                    statementLines.Add($"{tx.Time:dd/MM/yyyy} || {tx.Amount,10:F2} || {currentBalance,10:F2}");
+                    statementLines.Add($"{tx.TransactionTime:dd/MM/yyyy} || {tx.Amount,10:F2} || {currentBalance,10:F2}");
                 }
 
                 Console.WriteLine("Date       || Amount     || Balance");

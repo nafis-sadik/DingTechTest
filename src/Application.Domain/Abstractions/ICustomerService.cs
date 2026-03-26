@@ -4,8 +4,10 @@ namespace Application.Domain.Abstractions
 {
     public interface ICustomerService
     {
-        public Task AddCustomerAsync(Customer customer);
-        public Task UpdateCustomerAsync(Customer customer);
+        public Task<CustomerModel> AddCustomerAsync(CustomerModel customer);
+        public Task UpdateCustomerAsync(CustomerModel customer);
         public Task DeleteCustomerAsync(string customerId);
+        public Task<CustomerModel> GetCustomerById(string customerId);
+        public Task<IEnumerable<CustomerModel>> GetAllCustomers();
     }
 }

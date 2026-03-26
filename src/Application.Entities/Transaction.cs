@@ -7,12 +7,12 @@ namespace Application.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TransactionId { get; set; }
 
-        public string? From { get; set; }
+        public int? From { get; set; }
 
-        public string? To { get; set; }
+        public int? To { get; set; }
 
         public decimal Amount { get; set; }
 
-        public DateTime Time { get; set; }
+        public DateTime TransactionTime { get; set; }
     }
 }

@@ -25,23 +25,23 @@ namespace DingTechTest.Configurations
             // Seed a default customer if not present
             if (!await context.Set<Customer>().AnyAsync())
             {
-                var customer = new Customer
+                string defaultCustomerId = Guid.NewGuid().ToString();
+                await context.Set<Customer>().AddAsync(new Customer
                 {
-                    CustomerId = "C001",
+                    CustomerId = defaultCustomerId,
                     CustomerName = "John Doe",
-                    Email = "john@example.com"
-                };
-                await context.Set<Customer>().AddAsync(customer);
+                    Email = "john@example.com",
+                    PhoneNumber = "1234567890",
+                });
 
                 // Seed a default account for this customer
-                var account = new Account
+                await context.Set<Account>().AddAsync(new Account
                 {
-                    AccountHolderId = "C001",
+                    AccountHolderId = defaultCustomerId,
                     AccountTitle = "Main Savings",
                     CurrentBalance = 0,
                     CreatedAt = DateTime.UtcNow
-                };
-                await context.Set<Account>().AddAsync(account);
+                });
 
                 await context.SaveChangesAsync();
             }
