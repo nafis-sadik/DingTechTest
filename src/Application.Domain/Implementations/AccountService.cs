@@ -1,11 +1,9 @@
 using Application.Domain.Abstractions;
-using Application.Domain.Models;
 using Application.Entities;
 using Ding.Core.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Data.Entity;
-using System.Security.Principal;
 
 namespace Application.Domain.Implementations
 {
@@ -27,7 +25,7 @@ namespace Application.Domain.Implementations
                     .Where(account => account.AccountId == accountId)
                     .FirstOrDefault();
 
-                if(account == null)
+                if (account == null)
                     throw new ArgumentException("Account not found");
 
                 AccountEnttiy = account;
@@ -36,8 +34,8 @@ namespace Application.Domain.Implementations
 
         public async void Deposit(decimal amount)
         {
-            if (amount <= 0)
-                throw new ArgumentException("Deposit amount cannot be less than or equal to zero");
+            if (amount <= 0) { 
+                throw new ArgumentException("Deposit amount cannot be less than or equal to zero");}
 
             AccountEnttiy.CurrentBalance += amount;
             AccountEnttiy.UpdatedAt = DateTime.UtcNow;

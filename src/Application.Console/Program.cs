@@ -9,64 +9,97 @@ namespace Program
 {
     public class Program
     {
-        private static async Task<ServiceProvider> ProjectInitialization(string[] args)
+        private static HashSet<string> loopBreakStatements = new HashSet<string>
         {
-            var builder = Host.CreateApplicationBuilder();
+            "stop", "exit", "x"
+        };
 
-            builder.Services.RosolveDependencies(builder.Configuration);
-            await builder.Services.InitApplicationDatabase();
-            return builder.Services.BuildServiceProvider();
+        private static async Task<ServiceProvider> ApplicationInitialization(string[] args)
+        {
+            try
+            {
+                var builder = Host.CreateApplicationBuilder();
+
+                builder.Services.RosolveDependencies(builder.Configuration);
+                await builder.Services.InitApplicationDatabase();
+                return builder.Services.BuildServiceProvider();
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"Unexpected error: {ex.ToString()}");
+            }
         }
 
         public static async Task Main(string[] args)
         {
-            try
+            var serviceProvider = await ApplicationInitialization(args);
+            var customerService = serviceProvider.GetService<ICustomerService>();
+            if (customerService == null)
+                throw new ArgumentException("CustomerService not found in the service provider. Please check the dependency injection configuration.");
+
+            CustomerModel? customer = (await customerService.GetAllAccountHolders()).FirstOrDefault();
+            if (customer == null)
+                throw new ArgumentException("No customers with accounts found in the database. Please seed the database with appropriate data before running the application.");
+
+            int accountId = customer.AccountNumberList.First();
+            IAccountService accountService = new AccountService(serviceProvider, accountId);
+            string? userInputStr = string.Empty;
+            do
             {
-                var serviceProvider = await ProjectInitialization(args);
-                var customerService = serviceProvider.GetService<ICustomerService>();
-                if (customerService == null)
-                    throw new ArgumentException("CustomerService not found in the service provider. Please check the dependency injection configuration.");
-
-                var customers = await customerService.GetAllCustomers();
-                if (customers == null || !customers.Any())
-                    throw new ArgumentException("No customers found in the database. Please seed the database with appropriate data before running the application.");
-
-                var customer = customers.FirstOrDefault(customer => customer.AccountNumberList.Count() > 0);
-                if (customer == null)
-                    throw new ArgumentException("No customers with accounts found in the database. Please seed the database with appropriate data before running the application.");
-
-                int accountId = customer.AccountNumberList.First();
-                IAccountService accountService = new AccountService(serviceProvider, accountId);
-
-                // 1. Deposit 1000 on 10-01-2012
-                accountService.Deposit(1000);
-
-                // 2. Deposit 2000 on 13-01-2012
-                accountService.Deposit(2000);
-
-                // 3. Withdraw 500 on 14-01-2012
-                accountService.Withdraw(500);
-
-                // Output Statement
-                accountService.PrintStatement();
-
-                // Test Case: Overdraft Scenario (Withdrawal exceeding current balance)
-                // Current balance should be 2500 here. Attempting 5000.
-                Console.WriteLine("\nTesting Overdraft Scenario (Attempting 5000 withdrawal)...");
-                try
+                Console.Clear();
+                Console.WriteLine("Welcome to the Bank Account Management System!");
+                Console.WriteLine("Please enter a command (type 'stop', 'exit', or 'x' to quit):");
+                Console.WriteLine("Please select an option:");
+                Console.WriteLine("1. Deposit");
+                Console.WriteLine("2. Withdraw");
+                Console.WriteLine("3. PrintStatement");
+                userInputStr = Console.ReadLine();
+                if (int.TryParse(userInputStr, out int userInput))
                 {
-                    accountService.Withdraw(5000);
-                    Console.WriteLine("FAILED: Withdraw should have thrown balance error!");
+                    try
+                    {
+                        Console.Clear();
+                        switch (userInput)
+                        {
+                            case 1:
+                                Console.WriteLine("Enter the amount to deposit:");
+                                if (decimal.TryParse(Console.ReadLine(), out decimal depositAmount))
+                                {
+                                    accountService.Deposit(depositAmount);
+                                    Console.WriteLine($"Successfully deposited {depositAmount:C}.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid amount. Please enter a valid decimal number.");
+                                }
+                                break;
+                            case 2:
+                                Console.WriteLine("Enter the amount to withdraw:");
+                                if (decimal.TryParse(Console.ReadLine(), out decimal withdrawAmount))
+                                {
+                                    accountService.Withdraw(withdrawAmount);
+                                    Console.WriteLine($"Successfully withdrew {withdrawAmount:C}.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid amount. Please enter a valid decimal number.");
+                                }
+                                break;
+                            case 3:
+                                accountService.PrintStatement();
+                                break;
+                            default:
+                                Console.WriteLine("Invalid option. Please select 1, 2, or 3.");
+                                break;
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error processing your request: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"SUCCESS: Caught Expected Error: {ex.Message}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Unexpected error: {ex.Message}");
-            }
+            } while (!loopBreakStatements.Contains(Console.ReadLine()));
         }
     }
 }

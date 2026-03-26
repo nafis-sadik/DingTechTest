@@ -88,14 +88,14 @@ namespace Application.Entities.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("From")
-                        .HasColumnType("text");
+                    b.Property<int?>("From")
+                        .HasColumnType("integer");
 
-                    b.Property<DateTime>("Time")
+                    b.Property<int?>("To")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("TransactionTime")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("To")
-                        .HasColumnType("text");
 
                     b.HasKey("TransactionId");
 

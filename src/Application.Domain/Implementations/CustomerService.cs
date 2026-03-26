@@ -1,8 +1,9 @@
 using Application.Domain.Abstractions;
 using Application.Domain.Models;
+using Application.Entities;
 using Ding.Core.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Data.Entity;
 
 namespace Application.Domain.Implementations
 {
@@ -86,37 +87,22 @@ namespace Application.Domain.Implementations
             }
         }
 
-        public async Task<IEnumerable<CustomerModel>> GetAllCustomers()
+        public async Task<IList<CustomerModel>> GetAllAccountHolders()
         {
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
-                var _customerRepo = _repositoryFactory.GetRepository<Entities.Customer>();
-                var qyery = _customerRepo.UnTrackableQuery();
-                qyery = qyery.Where(customer => customer.CustomerId.Length > 0);
-                var qyery2 = qyery.Select(c => new Entities.Customer
-                {
-                    CustomerId = c.CustomerId,
-                    CustomerName = c.CustomerName,
-                    Email = c.Email,
-                    PhoneNumber = c.PhoneNumber,
-                    Accounts = c.Accounts.Select(account => new Entities.Account { AccountId = account.AccountId }).ToList()
-                });
+                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
 
-                var qyery2Result = await qyery2.ToListAsync();
-                List<CustomerModel> customerModels = new List<CustomerModel>();
-                foreach (var customer in qyery2Result)
-                {
-                    customerModels.Add(new CustomerModel
+                return await _customerRepo.UnTrackableQuery()
+                    .Where(customer => customer.Accounts.Count > 0)
+                    .Select(customer => new CustomerModel
                     {
                         CustomerId = customer.CustomerId,
                         CustomerName = customer.CustomerName,
                         Email = customer.Email,
                         PhoneNumber = customer.PhoneNumber,
-                        AccountNumberList = customer.Accounts.Select(a => a.AccountId).ToList()
-                    });
-                }
-
-                return customerModels;
+                        AccountNumberList = customer.Accounts.Select(account => account.AccountId).ToList()
+                    }).ToListAsync();
             }
         }
     }

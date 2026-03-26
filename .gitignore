@@ -119,4 +119,4 @@ out/
 appsettings.*.json
 
 # End of file
-/docker-containers/.env
+/docker-containers/ding-tech-db-data

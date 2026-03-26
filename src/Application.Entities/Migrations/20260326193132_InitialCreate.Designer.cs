@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Application.Entities.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260325150839_init")]
-    partial class init
+    [Migration("20260326193132_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -91,14 +91,14 @@ namespace Application.Entities.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<string>("From")
-                        .HasColumnType("text");
+                    b.Property<int?>("From")
+                        .HasColumnType("integer");
 
-                    b.Property<DateTime>("Time")
+                    b.Property<int?>("To")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("TransactionTime")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("To")
-                        .HasColumnType("text");
 
                     b.HasKey("TransactionId");
 

@@ -8,6 +8,6 @@ namespace Application.Domain.Abstractions
         public Task UpdateCustomerAsync(CustomerModel customer);
         public Task DeleteCustomerAsync(string customerId);
         public Task<CustomerModel> GetCustomerById(string customerId);
-        public Task<IEnumerable<CustomerModel>> GetAllCustomers();
+        public Task<IList<CustomerModel>> GetAllAccountHolders();
     }
 }

@@ -12,7 +12,7 @@ namespace Application.Entities
         public DbSet<Account> Accounts { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
 
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //    => optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5432;Database=ding_tech_test;Username=postgres;Password=postgres;");
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+            => optionsBuilder.UseNpgsql("Host=127.0.0.1;Port=5432;Database=ding_tech_test;Username=postgres;Password=postgres;");
     }
 }

@@ -1,5 +1,3 @@
-using Application.Domain.Models;
-
 namespace Application.Domain.Abstractions
 {
     public interface IAccountService

@@ -12,19 +12,7 @@ services:
     ports:
       - "${DB_PORT_OUTER:-5432}:${DB_PORT:-5432}"
     volumes:
-      - ding-tech-db-data:/var/lib/postgresql/data
-  # ding-tech-console:
-  #   build:
-  #     context: ../
-  #     dockerfile: src/Application.Console/Dockerfile
-  #   container_name: ding-tech-console
-  #   depends_on:
-  #     - ding-tech-db
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - ConnectionStrings__ApplicationConnection=Host=ding-tech-db;Port=${DB_PORT:-5432};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};
-  #     - ASPNETCORE_ENVIRONMENT=Development
+      - ./ding-tech-db-data:/var/lib/postgresql/data
 
 volumes:
   ding-tech-db-data:
