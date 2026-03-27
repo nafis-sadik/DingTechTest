@@ -40,8 +40,9 @@ namespace Application.Domain.Implementations
         {
             if (amount <= 0)
             {
-                //throw new ArgumentException("Deposit amount cannot be less than or equal to zero");
-                Console.WriteLine("Deposit amount cannot be less than or equal to zero");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Error: Deposit amount must be greater than zero.");
+                Console.ResetColor();
                 return;
             }
  
@@ -72,6 +73,9 @@ namespace Application.Domain.Implementations
  
                 await _repositoryFactory.SaveChangesAsync();
                 _logger.LogInformation($"Successfully deposited {amount} to Account {AccountEntity.AccountId}");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n✓ Success: Deposited {amount:F2}. New Balance: {AccountEntity.CurrentBalance:F2}");
+                Console.ResetColor();
             }
         }
 
@@ -79,15 +83,17 @@ namespace Application.Domain.Implementations
         {
             if (amount <= 0)
             {
-                //throw new ArgumentException("Withdraw amount cannot be less than or equal to zero");
-                Console.WriteLine("Withdraw amount cannot be less than or equal to zero");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Error: Withdraw amount must be greater than zero.");
+                Console.ResetColor();
                 return;
             }
-
+ 
             if (AccountEntity.CurrentBalance < amount)
             {
-                //throw new ArgumentException("Insufficient balance for withdrawal.");
-                Console.WriteLine("Insufficient balance for withdrawal.");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Error: Insufficient balance for withdrawal.");
+                Console.ResetColor();
                 return;
             }
 
@@ -118,42 +124,62 @@ namespace Application.Domain.Implementations
 
                 await _repositoryFactory.SaveChangesAsync();
                 _logger.LogInformation($"Successfully withdrew {amount} from Account {AccountEntity.AccountId}");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n✓ Success: Withdrew {amount:F2}. New Balance: {AccountEntity.CurrentBalance:F2}");
+                Console.ResetColor();
             }
         }
 
         public async void PrintStatement()
         {
-            Console.WriteLine($"\n--- Fetching transactions for Account ID: {AccountEntity.AccountId} ---\n");
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"\n--- ACCOUNT STATEMENT (ID: {AccountEntity.AccountId}) ---");
+            Console.ResetColor();
+            
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
-
+ 
                 var transactions = await _transactionRepo.UnTrackableQuery()
                     .Where(t => t.To == AccountEntity.AccountId || t.From == AccountEntity.AccountId)
                     .OrderByDescending(t => t.TransactionTime)
                     .ToListAsync();
-
+ 
                 if (transactions == null || !transactions.Any())
                 {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("No transactions found for this account.");
+                    Console.ResetColor();
                     return;
                 }
-
+ 
                 var statementLines = new List<string>();
                 foreach (var tx in transactions)
                 {
-                    statementLines.Add($"{tx.TransactionTime:dd/MM/yyyy} || {tx.Amount,10:F2} || {tx.Balance,10:F2}");
+                    var bdTime = tx.TransactionTime.AddHours(6);
+                    statementLines.Add($"{bdTime:dd/MM/yyyy} || {bdTime:HH:mm} || {tx.Amount,10:F2} || {tx.Balance,10:F2}");
                 }
-
-                Console.WriteLine("Date       || Amount     || Balance");
+ 
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("----------------------------------------------------");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine("Date       || Time  ||   Amount   ||   Balance  ");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("----------------------------------------------------");
+                Console.ResetColor();
+                
                 statementLines.Reverse();
                 foreach (var line in statementLines)
                 {
                     Console.WriteLine(line);
                 }
-                Console.WriteLine($"\nCurrent Balance: {transactions.First().Balance:F2}");
-                Console.WriteLine("\n--- End of Statement ---\n");
-                Console.WriteLine("Press any key to return to the main menu...");
+                
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.WriteLine("----------------------------------------------------");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"CURRENT BALANCE: {transactions.First().Balance:F2}");
+                Console.ResetColor();
+                Console.WriteLine("--- End of Statement ---\n");
             }
         }
     }

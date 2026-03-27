@@ -47,12 +47,24 @@ namespace Program
             do
             {
                 Console.Clear();
-                Console.WriteLine("Welcome to the Bank Account Management System!");
-                Console.WriteLine("To stop the application and exit please enter a command (type 'stop', 'exit', or 'x' to quit) or press enter.");
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("====================================================");
+                Console.WriteLine("    WELCOME TO THE BANK ACCOUNT MANAGEMENT SYSTEM   ");
+                Console.WriteLine("====================================================");
+                Console.ResetColor();
+                Console.WriteLine($"Currently Managing Account: {accountId}");
+                Console.WriteLine("--- Customer: " + customer.CustomerName + " ---");
+                Console.WriteLine();
                 Console.WriteLine("Please select an option:");
-                Console.WriteLine("1. Deposit");
-                Console.WriteLine("2. Withdraw");
-                Console.WriteLine("3. PrintStatement");
+                Console.WriteLine("  1. Deposit Funds");
+                Console.WriteLine("  2. Withdraw Funds");
+                Console.WriteLine("  3. Print Statement");
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Tip: Type 'stop', 'exit', or 'x' to quit.");
+                Console.ResetColor();
+                Console.Write("\nChoice > ");
+                
                 userInputStr = Console.ReadLine();
                 Console.Clear();                
                 try
@@ -62,46 +74,60 @@ namespace Program
                         switch (userInput)
                         {
                             case 1:
-                                Console.WriteLine("Enter the amount to deposit:");
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine(">>> DEPOSITING FUNDS <<<");
+                                Console.ResetColor();
+                                Console.Write("Enter the amount to deposit: ");
                                 if (decimal.TryParse(Console.ReadLine(), out decimal depositAmount))
                                 {
                                     accountService.Deposit(depositAmount);
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Invalid amount. Please enter a valid decimal number.");
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine("Error: Invalid amount. Please enter a valid decimal number.");
+                                    Console.ResetColor();
                                 }
                                 break;
                             case 2:
-                                Console.WriteLine("Enter the amount to withdraw:");
+                                Console.ForegroundColor = ConsoleColor.Magenta;
+                                Console.WriteLine(">>> WITHDRAWING FUNDS <<<");
+                                Console.ResetColor();
+                                Console.Write("Enter the amount to withdraw: ");
                                 if (decimal.TryParse(Console.ReadLine(), out decimal withdrawAmount))
                                 {
                                     accountService.Withdraw(withdrawAmount);
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Invalid amount. Please enter a valid decimal number.");
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.WriteLine("Error: Invalid amount. Please enter a valid decimal number.");
+                                    Console.ResetColor();
                                 }
                                 break;
                             case 3:
                                 accountService.PrintStatement();
                                 break;
                             default:
+                                Console.ForegroundColor = ConsoleColor.Red;
                                 Console.WriteLine("Invalid option. Please select 1, 2, or 3.");
+                                Console.ResetColor();
                                 break;
                         }
                     }
-
-                    if (string.IsNullOrEmpty(userInputStr) || loopBreakStatements.Contains(userInputStr))
+ 
+                    if (string.IsNullOrEmpty(userInputStr) || loopBreakStatements.Contains(userInputStr?.ToLower()))
                         return;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing your request: {ex.Message}");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Critical Error: {ex.Message}");
+                    Console.ResetColor();
                 }
-
-                Console.WriteLine("Press any key to go back to main menu");
-            } while (!loopBreakStatements.Contains(Console.ReadLine()));
+ 
+                Console.WriteLine("\n[Press any key to return to the main menu]");
+            } while (!loopBreakStatements.Contains(Console.ReadLine()?.ToLower()));
         }
     }
 }
