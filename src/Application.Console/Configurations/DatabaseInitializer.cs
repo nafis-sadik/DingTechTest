@@ -14,7 +14,7 @@ namespace DingTechTest.Configurations
                 var context = provider.GetRequiredService<ApplicationDbContext>();
 
                 // Ensure the database and schema are created.
-                if((await context.Database.GetPendingMigrationsAsync()).Any())
+                if ((await context.Database.GetPendingMigrationsAsync()).Any())
                 {
                     await context.Database.MigrateAsync();
                 }

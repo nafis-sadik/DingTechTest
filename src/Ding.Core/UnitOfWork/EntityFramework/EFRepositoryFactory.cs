@@ -16,13 +16,10 @@ namespace Ding.Core.EntityFramework
 
         public void DetachAllEntities()
         {
-            IEnumerable<EntityEntry> changedEntriesCopy = _dbContext.ChangeTracker.Entries()
-                .Where(x => x.State == EntityState.Modified
-                        || x.State == EntityState.Added
-                        || x.State == EntityState.Deleted);
-            foreach (var entity in changedEntriesCopy)
+            var entries = _dbContext.ChangeTracker.Entries().ToList();
+            foreach (var entry in entries)
             {
-                entity.State = EntityState.Detached;
+                entry.State = EntityState.Detached;
             }
         }
 
@@ -39,6 +36,7 @@ namespace Ding.Core.EntityFramework
             // Do not dispose the dbContext here.
             // Since it is resolved from DI (scoped), the container should handle its lifecycle.
             // Disposing it here would prevent subsequent use of the context in the same scope.
+            DetachAllEntities();
         }
     }
 }

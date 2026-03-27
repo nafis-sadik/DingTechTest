@@ -16,9 +16,9 @@ namespace Application.Domain.Implementations
         {
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
-                var _customerRepo = _repositoryFactory.GetRepository<Entities.Customer>();
+                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
 
-                Entities.Customer newCustomer = new Entities.Customer
+                Customer newCustomer = new Customer
                 {
                     CustomerId = Guid.NewGuid().ToString(),
                     CustomerName = customer.CustomerName,
@@ -28,7 +28,7 @@ namespace Application.Domain.Implementations
                 newCustomer = await _customerRepo.InsertAsync(newCustomer);
                 await _repositoryFactory.SaveChangesAsync();
 
-                _logger.LogInformation("Successfully added customer {CustomerName} ({CustomerId})", customer.CustomerName, customer.CustomerId);
+                _logger.LogInformation($"Successfully added customer {customer.CustomerName} ({customer.CustomerId})");
 
                 return new CustomerModel
                 {
@@ -44,7 +44,7 @@ namespace Application.Domain.Implementations
         {
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
-                var _customerRepo = _repositoryFactory.GetRepository<Entities.Customer>();
+                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
 
                 var existing = await _customerRepo.GetAsync(customer.CustomerId);
                 if (existing == null) throw new ArgumentException("Customer not found.");
@@ -55,7 +55,7 @@ namespace Application.Domain.Implementations
 
                 _customerRepo.Update(existing);
                 await _repositoryFactory.SaveChangesAsync();
-                _logger.LogInformation("Successfully updated customer {CustomerId}", customer.CustomerId);
+                _logger.LogInformation($"Successfully updated customer {customer.CustomerId}");
             }
         }
 
@@ -63,10 +63,10 @@ namespace Application.Domain.Implementations
         {
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
-                var _customerRepo = _repositoryFactory.GetRepository<Entities.Customer>();
+                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
                 await _customerRepo.DeleteAsync(customerId);
                 await _repositoryFactory.SaveChangesAsync();
-                _logger.LogInformation("Successfully deleted customer {CustomerId}", customerId);
+                _logger.LogInformation($"Successfully deleted customer {customerId}");
             }
         }
 
@@ -74,7 +74,7 @@ namespace Application.Domain.Implementations
         {
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
-                var _customerRepo = _repositoryFactory.GetRepository<Entities.Customer>();
+                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
                 var customer = await _customerRepo.GetAsync(customerId);
                 if (customer == null) throw new ArgumentException("Customer not found.");
                 return new CustomerModel

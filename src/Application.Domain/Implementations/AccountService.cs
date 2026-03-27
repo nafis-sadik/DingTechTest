@@ -11,7 +11,7 @@ namespace Application.Domain.Implementations
     {
         private readonly ILogger<AccountService> _logger;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        private readonly Account AccountEnttiy;
+        private readonly Account AccountEntity;
 
         public AccountService(IServiceProvider provider, int accountId)
         {
@@ -26,93 +26,110 @@ namespace Application.Domain.Implementations
                     .FirstOrDefault();
 
                 if (account == null)
-                    throw new ArgumentException("Account not found");
+                {
+                    //throw new ArgumentException("Account not found");
+                    Console.WriteLine("Account not found");
+                    return;
+                }
 
-                AccountEnttiy = account;
+                AccountEntity = account;
             }
         }
 
         public async void Deposit(decimal amount)
         {
-            if (amount <= 0) { 
-                throw new ArgumentException("Deposit amount cannot be less than or equal to zero");}
-
-            AccountEnttiy.CurrentBalance += amount;
-            AccountEnttiy.UpdatedAt = DateTime.UtcNow;
-
+            if (amount <= 0)
+            {
+                //throw new ArgumentException("Deposit amount cannot be less than or equal to zero");
+                Console.WriteLine("Deposit amount cannot be less than or equal to zero");
+                return;
+            }
+ 
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _accountRepo = _repositoryFactory.GetRepository<Account>();
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
-
+ 
+                AccountEntity.CurrentBalance += amount;
+                AccountEntity.UpdatedAt = DateTime.UtcNow;
                 _accountRepo.ColumnUpdate(
-                    AccountEnttiy.AccountId,
+                    AccountEntity.AccountId,
                     new Dictionary<string, object>
                     {
-                        { nameof(AccountEnttiy.CurrentBalance), AccountEnttiy.CurrentBalance },
-                        { nameof(AccountEnttiy.UpdatedAt), AccountEnttiy.UpdatedAt }
+                        { nameof(AccountEntity.CurrentBalance), AccountEntity.CurrentBalance },
+                        { nameof(AccountEntity.UpdatedAt), AccountEntity.UpdatedAt }
                     }
                 );
-
-                _transactionRepo.InsertAsync(new Transaction
+ 
+                await _transactionRepo.InsertAsync(new Transaction
                 {
                     From = null,
-                    To = AccountEnttiy.AccountId,
+                    To = AccountEntity.AccountId,
                     Amount = amount,
+                    Balance = AccountEntity.CurrentBalance,
                     TransactionTime = DateTime.UtcNow,
-                }).Wait(); // Synchronous wait within void method
-
-                _repositoryFactory.SaveChanges();
-                _logger.LogInformation("Successfully deposited {Amount} to Account {AccountId}", amount, AccountEnttiy.AccountId);
+                }); // Synchronous wait within void method
+ 
+                await _repositoryFactory.SaveChangesAsync();
+                _logger.LogInformation($"Successfully deposited {amount} to Account {AccountEntity.AccountId}");
             }
         }
 
         public async void Withdraw(decimal amount)
         {
             if (amount <= 0)
-                throw new ArgumentException("Withdraw amount cannot be less than or equal to zero");
+            {
+                //throw new ArgumentException("Withdraw amount cannot be less than or equal to zero");
+                Console.WriteLine("Withdraw amount cannot be less than or equal to zero");
+                return;
+            }
 
-            if (AccountEnttiy.CurrentBalance < amount)
-                throw new InvalidOperationException("Error: Insufficient balance for withdrawal.");
+            if (AccountEntity.CurrentBalance < amount)
+            {
+                //throw new ArgumentException("Insufficient balance for withdrawal.");
+                Console.WriteLine("Insufficient balance for withdrawal.");
+                return;
+            }
 
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _accountRepo = _repositoryFactory.GetRepository<Account>();
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
-                AccountEnttiy.CurrentBalance -= amount;
-                AccountEnttiy.UpdatedAt = DateTime.UtcNow;
+                AccountEntity.CurrentBalance -= amount;
+                AccountEntity.UpdatedAt = DateTime.UtcNow;
                 _accountRepo.ColumnUpdate(
-                    AccountEnttiy.AccountId,
+                    AccountEntity.AccountId,
                     new Dictionary<string, object>
                     {
-                        { nameof(AccountEnttiy.CurrentBalance), AccountEnttiy.CurrentBalance },
-                        { nameof(AccountEnttiy.UpdatedAt), AccountEnttiy.UpdatedAt }
+                        { nameof(AccountEntity.CurrentBalance), AccountEntity.CurrentBalance },
+                        { nameof(AccountEntity.UpdatedAt), AccountEntity.UpdatedAt }
                     }
                 );
 
                 await _transactionRepo.InsertAsync(new Transaction
                 {
-                    From = AccountEnttiy.AccountId,
+                    From = AccountEntity.AccountId,
                     To = null,
                     Amount = amount,
+                    Balance = AccountEntity.CurrentBalance,
                     TransactionTime = DateTime.UtcNow,
                 }); // Synchronous wait within void method
 
-                _repositoryFactory.SaveChanges();
-                _logger.LogInformation("Successfully withdrew {Amount} from Account {AccountId}", amount, AccountEnttiy.AccountId);
+                await _repositoryFactory.SaveChangesAsync();
+                _logger.LogInformation($"Successfully withdrew {amount} from Account {AccountEntity.AccountId}");
             }
         }
 
         public async void PrintStatement()
         {
-            Console.WriteLine($"\n--- Fetching transactions for Account ID: {AccountEnttiy.AccountId} ---\n");
+            Console.WriteLine($"\n--- Fetching transactions for Account ID: {AccountEntity.AccountId} ---\n");
             using (var _repositoryFactory = _unitOfWorkManager.GetRepositoryFactory())
             {
                 var _transactionRepo = _repositoryFactory.GetRepository<Transaction>();
 
                 var transactions = await _transactionRepo.UnTrackableQuery()
-                    .Where(t => t.To == AccountEnttiy.AccountId || t.From == AccountEnttiy.AccountId)
+                    .Where(t => t.To == AccountEntity.AccountId || t.From == AccountEntity.AccountId)
                     .OrderByDescending(t => t.TransactionTime)
                     .ToListAsync();
 
@@ -122,13 +139,10 @@ namespace Application.Domain.Implementations
                     return;
                 }
 
-                decimal currentBalance = 0;
                 var statementLines = new List<string>();
-
                 foreach (var tx in transactions)
                 {
-                    currentBalance += tx.Amount;
-                    statementLines.Add($"{tx.TransactionTime:dd/MM/yyyy} || {tx.Amount,10:F2} || {currentBalance,10:F2}");
+                    statementLines.Add($"{tx.TransactionTime:dd/MM/yyyy} || {tx.Amount,10:F2} || {tx.Balance,10:F2}");
                 }
 
                 Console.WriteLine("Date       || Amount     || Balance");
@@ -137,6 +151,9 @@ namespace Application.Domain.Implementations
                 {
                     Console.WriteLine(line);
                 }
+                Console.WriteLine($"\nCurrent Balance: {transactions.First().Balance:F2}");
+                Console.WriteLine("\n--- End of Statement ---\n");
+                Console.WriteLine("Press any key to return to the main menu...");
             }
         }
     }

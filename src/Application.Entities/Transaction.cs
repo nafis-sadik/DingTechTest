@@ -13,6 +13,8 @@ namespace Application.Entities
 
         public decimal Amount { get; set; }
 
+        public decimal Balance { get; set; }
+
         public DateTime TransactionTime { get; set; }
     }
 }

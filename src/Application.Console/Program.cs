@@ -48,17 +48,17 @@ namespace Program
             {
                 Console.Clear();
                 Console.WriteLine("Welcome to the Bank Account Management System!");
-                Console.WriteLine("Please enter a command (type 'stop', 'exit', or 'x' to quit):");
+                Console.WriteLine("To stop the application and exit please enter a command (type 'stop', 'exit', or 'x' to quit) or press enter.");
                 Console.WriteLine("Please select an option:");
                 Console.WriteLine("1. Deposit");
                 Console.WriteLine("2. Withdraw");
                 Console.WriteLine("3. PrintStatement");
                 userInputStr = Console.ReadLine();
-                if (int.TryParse(userInputStr, out int userInput))
+                Console.Clear();                
+                try
                 {
-                    try
+                    if (int.TryParse(userInputStr, out int userInput))
                     {
-                        Console.Clear();
                         switch (userInput)
                         {
                             case 1:
@@ -66,7 +66,6 @@ namespace Program
                                 if (decimal.TryParse(Console.ReadLine(), out decimal depositAmount))
                                 {
                                     accountService.Deposit(depositAmount);
-                                    Console.WriteLine($"Successfully deposited {depositAmount:C}.");
                                 }
                                 else
                                 {
@@ -78,7 +77,6 @@ namespace Program
                                 if (decimal.TryParse(Console.ReadLine(), out decimal withdrawAmount))
                                 {
                                     accountService.Withdraw(withdrawAmount);
-                                    Console.WriteLine($"Successfully withdrew {withdrawAmount:C}.");
                                 }
                                 else
                                 {
@@ -92,13 +90,17 @@ namespace Program
                                 Console.WriteLine("Invalid option. Please select 1, 2, or 3.");
                                 break;
                         }
+                    }
 
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error processing your request: {ex.Message}");
-                    }
+                    if (string.IsNullOrEmpty(userInputStr) || loopBreakStatements.Contains(userInputStr))
+                        return;
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing your request: {ex.Message}");
+                }
+
+                Console.WriteLine("Press any key to go back to main menu");
             } while (!loopBreakStatements.Contains(Console.ReadLine()));
         }
     }
