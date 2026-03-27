@@ -14,10 +14,10 @@ Since the requirements did not mandate a web application, I resorted to building
 
 Despite pivoting to a console application, I maintained a robust, scalable structure:
 
-- **Layered Architecture**
-- **SOLID Principles**
-- **Repository Design Pattern**
-- **Factory Design Pattern**
+- **Layered Architecture:** The console application (Presentation) strictly delegates to `Application.Domain` (Business Logic), which in turn relies on `Ding.Core` (Data Access). This structural boundary proves that the business logic can instantly be consumed by a REST API controller tomorrow with zero modifications.
+- **Dependency Injection & SOLID Principles:** Every dependency (like `ILogger` or `IUnitOfWorkManager`) is injected via the constructor. The application firmly adheres to the Single Responsibility and Dependency Inversion principles by operating solely on abstractions instead of concrete implementations.
+- **Repository & Unit of Work Design Pattern:** These patterns completely abstract Entity Framework Core away from the domain logic. They standardize data access without leaking database context (`DbContext`) concerns into the main service layer.
+- **Factory Design Pattern:** Utilizing `IRepositoryFactory` allowed the application to dynamically spawn entirely fresh, disconnected generic Repositories per user operation. This factory abstraction was the critical backbone of our safe race condition isolation strategy.
 
 By implementing these standards, the business logic and data access layers remain completely decoupled from the presentation layer (the console app). This ensures the application is future-proof and can be easily refactored into a Web API or another interface if needed down the line.
 

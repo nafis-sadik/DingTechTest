@@ -101,3 +101,8 @@ To run the project locally, follow these steps:
 ## 📝 License
 
 This project is licensed under the [MIT License](LICENSE).
+
+---
+
+> 💡 **Curious about the architectural decisions and race condition handling?**  
+> [Dive into the Design Documentation (`docs/README.md`)](docs/README.md) to explore the thought process, pattern selections, and how the firm interface constraints were successfully navigated!
