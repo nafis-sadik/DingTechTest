@@ -42,7 +42,6 @@ namespace Program
                 throw new ArgumentException("No customers with accounts found in the database. Please seed the database with appropriate data before running the application.");
 
             int accountId = customer.AccountNumberList.First();
-            IAccountService accountService = new AccountService(serviceProvider, accountId);
             string? userInputStr = string.Empty;
             do
             {
@@ -66,11 +65,12 @@ namespace Program
                 Console.Write("\nChoice > ");
                 
                 userInputStr = Console.ReadLine();
-                Console.Clear();                
+                Console.Clear();
                 try
                 {
                     if (int.TryParse(userInputStr, out int userInput))
                     {
+                        IAccountService accountService = new AccountService(serviceProvider, accountId);
                         switch (userInput)
                         {
                             case 1:
