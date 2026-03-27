@@ -34,23 +34,7 @@ A high-performance **Bank Account Management System** built with **.NET 10.0** a
 
 The project follows a modular clean architecture:
 
-```mermaid
-graph TD
-    Console["Application.Console (Host App)"] 
-    Console --> Domain["Application.Domain (Business Logic)"]
-    Domain --> Entities["Application.Entities (Data Models)"]
-    Entities --> Core["Ding.Core (Base Components)"]
-    
-    subgraph "External Dependencies"
-        Core --> Postgres["Postgres / Npgsql"]
-        Core --> EF["EF Core 10.0"]
-    end
-
-    classDef primary fill:#1a237e,stroke:#1a237e,color:#fff,stroke-width:2px;
-    classDef secondary fill:#311b92,stroke:#311b92,color:#fff,stroke-width:2px;
-    class Console,Domain,Entities,Core primary;
-    class Postgres,EF secondary;
-```
+![Architecture Diagram](./docs/Architecture%26Dependencies.svg)
 
 ### Key Libraries
 
